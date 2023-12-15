@@ -3,6 +3,7 @@ from etl_scripts.manage_s3 import S3Bucket as S3
 from dotenv import load_dotenv
 import configparser
 import os
+from datetime import datetime
 
 
 load_dotenv()
@@ -11,13 +12,16 @@ config.read('config/aws_config.ini')
 endpoint_url_aws = os.getenv('endpoint_url')
 bucket = S3(config, endpoint_url_aws)
 
-#bucket.create_buckets(['bucket-raw', 'bucket-processed'])
+now = datetime.now()
+datetime_str = now.strftime("%Y%m%d%H%M%S")
+
+bucket.create_buckets(['bucket-raw', 'bucket-processed'])
 #print(bucket.get_list_of_buckets_created())
-#print(bucket.list_files_in_raw_directory())
+#print(bucket.get_list_of_buckets_created())
 
-#for file in bucket.list_files_in_raw_directory():
-#    bucket.upload_file_to_s3_bucket(file_name= 'data/raw/Real_Estate_Sales_2001-2020_GL.csv' , bucket='bucket-raw')
+#bucket.drop_buckets(['bucket-raw', 'bucket-processed'])
 
-
-
-bucket.upload_to_s3('data/raw/Real_Estate_Sales_2001-2020_GL.csv', 'bucket-raw', 'Real_Estate_Sales_2001-2020_GL.csv')
+path = 'data/raw/'
+for file in bucket.list_files_in_raw_directory():
+    file_name, file_extension = os.path.splitext(file)
+    bucket.upload_to_s3(path + file, 'bucket-raw', file_name + '_' + datetime_str + file_extension)
