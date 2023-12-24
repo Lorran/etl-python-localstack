@@ -1,7 +1,9 @@
 #connect s3 bucket localstack and create bcuket
+from typing import Any
 import boto3
 from botocore.exceptions import ClientError
 import os
+import pandas as pd
 
 #class S3Bucket:
 class S3Bucket:
@@ -15,6 +17,16 @@ class S3Bucket:
         response = s3_client.list_objects_v2(Bucket=bucket_name)
         files = [file['Key'] for file in response['Contents']]
         return files
+
+    def read_csv_from_bucket(self, bucket_name, file_name):
+        s3_client = boto3.client('s3', endpoint_url=self.__endpoint_aws)
+        response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+        file_content = response['Body']
+        df = pd.read_csv(file_content)
+        return df
+    
+#read_csv_from_bucket and copy to other bucket
+
  
     def get_list_of_buckets_created(self):
         s3_client = boto3.client('s3', endpoint_url=self.__endpoint_aws)
@@ -34,6 +46,20 @@ class S3Bucket:
                 return False
         return True
 
+    def drop_files(self, lst_bucket_names):
+        s3_client = boto3.client('s3', endpoint_url=self.__endpoint_aws)
+        for bucket_name in lst_bucket_names:
+            try:
+                response = s3_client.list_objects_v2(Bucket=bucket_name)
+                if 'Contents' in response:
+                    for file in response['Contents']:
+                        s3_client.delete_object(Bucket=bucket_name, Key=file['Key'])
+            except ClientError as e:
+                print(e)
+                return False
+        return True
+
+
     def drop_buckets(self, lst_bucket_names):
         s3_client = boto3.client('s3', endpoint_url=self.__endpoint_aws)
         for bucket_name in lst_bucket_names:
@@ -46,7 +72,6 @@ class S3Bucket:
 
     def upload_to_s3(self, file_name, bucket, s3_file_name):
         s3 = boto3.client('s3', endpoint_url=self.__endpoint_aws)
-
         try:
             s3.upload_file(file_name, bucket, s3_file_name)
             print("Upload Successful")
@@ -54,9 +79,12 @@ class S3Bucket:
         except FileNotFoundError:
             print("The file was not found")
             return False
-        except:
-            print("Credentials not available")
+        except: 
             return False
+
+    def upload_to_s3_string(self, csv_data, bucket_name, file_name):
+        s3_resource = boto3.resource('s3', endpoint_url=self.__endpoint_aws)
+        s3_resource.Object(bucket_name, file_name).put(Body=csv_data)
 
 #Local File
     def list_files_in_raw_directory(self):
@@ -81,6 +109,6 @@ class S3Bucket:
 #     s3 = S3Bucket()
 #     p1 = ('bucket-row-data','bucket-transform-data')
 #     #lst_buckets = s3.create_buckets(p1)
-#     # s3.delete_buckets(lst_buckets)
+#      s3.delete_buckets(lst_buckets)
 #     print(s3.get_list_of_buckets_created())
  
