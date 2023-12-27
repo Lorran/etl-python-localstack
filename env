@@ -1,0 +1,4 @@
+# Arquivo para variáveis de ambiente (credenciais AWS, etc.)
+#AWS_ACCESS_KEY_ID=test
+#AWS_SECRET_ACCESS_KEY=test
+endpoint_url='http://localhost:4566'
