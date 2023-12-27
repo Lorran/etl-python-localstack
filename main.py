@@ -3,11 +3,9 @@ from etl_scripts.manage_s3 import S3Bucket as S3
 from dotenv import load_dotenv
 import configparser
 import os
-from datetime import datetime
-from etl_scripts.extract import Extract as Extract
 import pandas as pd
 from io import StringIO
-
+from etl_scripts.extract import Extract as Extract
 
 load_dotenv()
 config = configparser.ConfigParser()
@@ -19,17 +17,14 @@ read = Extract()
 now = datetime.now()
 datetime_str = now.strftime("%Y%m%d%H%M%S")
 
-#print(bucket.get_list_of_buckets_created())
-#print(bucket.get_list_of_buckets_created())
-
+# Drop existing buckets
 bucket.drop_files(['bucket-raw', 'bucket-processed'])
 bucket.drop_buckets(['bucket-raw', 'bucket-processed'])
 
-
+# Create new buckets
 bucket.create_buckets(['bucket-raw', 'bucket-processed'])
 
-df = pd.DataFrame()
-
+# Process files in the 'data/raw/' directory
 path = 'data/raw/'
 for file in bucket.list_files_in_raw_directory():
     # Upload file to s3
